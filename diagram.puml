@@ -1,0 +1,38 @@
+@startuml
+
+title Multithreaded Log Analyzer - Architecture
+
+actor User
+
+rectangle "Application Log File" as LogFile
+
+component "LogParser" as Parser
+component "ThreadSafeQueue\nProducer-Consumer" as Queue
+
+component "Worker Thread 1" as Worker1
+component "Worker Thread 2" as Worker2
+component "Worker Thread 3" as Worker3
+component "Worker Thread 4" as Worker4
+
+component "LogAnalyzer\nStatistics Aggregator" as Analyzer
+database "Statistics\nINFO / WARN / ERROR\nError Frequency" as Stats
+
+User --> LogFile : Provides log file
+
+LogFile --> Parser : Read log lines
+
+Parser --> Queue : Parsed LogEntry
+
+Queue --> Worker1
+Queue --> Worker2
+Queue --> Worker3
+Queue --> Worker4
+
+Worker1 --> Analyzer
+Worker2 --> Analyzer
+Worker3 --> Analyzer
+Worker4 --> Analyzer
+
+Analyzer --> Stats
+
+@enduml
