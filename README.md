@@ -1,3 +1,5 @@
+[![C++ Build and Test](https://github.com/SaiNagane/cpp-log-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/SaiNagane/cpp-log-analyzer/actions/workflows/ci.yml)
+
 # Multithreaded Log Analyzer
 
 A multithreaded log analysis system built with modern C++17. The application parses application logs, processes entries concurrently using worker threads, and generates statistics for INFO, WARN, and ERROR events.
