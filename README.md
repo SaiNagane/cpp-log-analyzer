@@ -17,37 +17,74 @@ A multithreaded log analysis system built with modern C++17. The application par
 * CMake-based build system
 * Automated build and test using GitHub Actions
 
+
 ## Architecture
 
+The application follows a producer-consumer architecture:
+
 ```text
-Application Log
-      |
-      v
-+-------------+
-|  LogParser  |
-+-------------+
-      |
-      v
-+----------------------+
-| ThreadSafeQueue      |
-| Producer-Consumer    |
-+----------------------+
-      |
-      v
-+----------------------+
-| Worker Threads       |
-| std::thread          |
-+----------------------+
-      |
-      v
-+----------------------+
-|    LogAnalyzer       |
-| Statistics & Errors  |
-+----------------------+
-      |
-      v
-Summary Report
+                         Application Log File
+                                  |
+                                  v
+                         +------------------+
+                         |    LogParser     |
+                         | Parse & Validate |
+                         +--------+---------+
+                                  |
+                                  | LogEntry
+                                  v
+                    +---------------------------+
+                    |    ThreadSafeQueue<T>     |
+                    | Mutex + Condition Variable|
+                    +-------------+-------------+
+                                  |
+                    +-------------+-------------+
+                    |             |             |
+                    v             v             v
+               +---------+   +---------+   +---------+
+               | Worker  |   | Worker  |   | Worker  |
+               | Thread  |   | Thread  |   | Thread  |
+               +----+----+   +----+----+   +----+----+
+                    |             |             |
+                    +-------------+-------------+
+                                  |
+                                  v
+                         +------------------+
+                         |   LogAnalyzer    |
+                         | Thread-Safe      |
+                         | Statistics       |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | Analysis Summary |
+                         | INFO / WARN /    |
+                         | ERROR / Errors   |
+                         +------------------+
 ```
+
+### Component Responsibilities
+
+| Component            | Responsibility                                                              |
+| -------------------- | --------------------------------------------------------------------------- |
+| **LogParser**        | Parses raw log lines and converts them into structured `LogEntry` objects   |
+| **ThreadSafeQueue**  | Safely transfers parsed log entries between the producer and worker threads |
+| **Worker Threads**   | Consume log entries concurrently and pass them to the analyzer              |
+| **LogAnalyzer**      | Maintains thread-safe statistics and aggregates repeated error messages     |
+| **Main Application** | Reads the input file, coordinates processing, and displays the final report |
+
+### Processing Flow
+
+1. `main.cpp` reads the application log file line by line.
+2. `LogParser` validates and converts each line into a `LogEntry`.
+3. Valid entries are submitted to the thread-safe queue.
+4. Multiple worker threads consume entries concurrently.
+5. `LogAnalyzer` updates INFO, WARN, ERROR, and error-frequency statistics.
+6. Worker threads are joined after all entries are processed.
+7. The application prints the final analysis summary.
+
+The PlantUML source for the architecture is available in [`diagram.puml`](./diagram.puml).
+
 
 ## Tech Stack
 
